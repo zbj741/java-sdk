@@ -101,7 +101,7 @@ public class RemoteCall {
     }
     @Test
     public void testSendTx() throws Exception {
-        // 1. 初始化公私钥对
+        // 1. 加载本地用户公私钥对
         String address = "0xb4f1f4be27eea76bdaec8f2ec86340a67a167e36";
         String private_key = "78f18327d1cd40a6cfc20899233e1bd2843c4f76ccef66d0386351dfc0c142ab";
         CryptoSuite cs = new CryptoSuite(CryptoType.ECDSA_TYPE);
@@ -109,22 +109,24 @@ public class RemoteCall {
 
         // 2. 构造交易对象
         // 2.1 基础数据
-        String from = address;
-        String to = "0xcd78b0552d6008a375b859f83be8fd481d44f951";
-        BigInteger value = BigInteger.ZERO;
-        // 2.2 合约调用参数
+        String from = address; //交易发起人
+        String to = "0xcd78b0552d6008a375b859f83be8fd481d44f951"; //合约地址
+        BigInteger value = BigInteger.ZERO; //转帐金额
+        // 2.2 合约调用参数(合约方法，合约方法参数)
         CallMethod callMethod = new CallMethod("insertUser", new Object[]{"1", "zhang"});
         byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
 
         // 2.3 组装交易对象
         Transaction tx = new Transaction(from.getBytes(), to.getBytes(), value, data);
 
+        // 3. 交易签名
         final String hash = cs.hash(tx.toString());
-        System.out.println("hash:>"+hash);
         SignatureResult res = cs.sign(hash, keyPair);
+        String sig = res.convertToString();
 
+        // 4. 发送请求至链平台
         String txJson = new ObjectMapper().writeValueAsString(tx);
-        HttpClientResult result = HttpClientUtils.doPost("http://127.0.0.1:17600/api/v1/tx/send?sig="+res.convertToString(), txJson);
+        HttpClientResult result = HttpClientUtils.doPost("http://127.0.0.1:17600/api/v1/tx/send?sig="+sig, txJson);
         System.out.println(result);
     }
 }
