@@ -1,41 +1,34 @@
 package com.buaa.blockchain.sdk.model;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
-/**
- * xxxx
- *
- * @author <a href="http://github.com/hackdapp">hackdapp</a>
- * @date 2020/12/21
- * @since JDK1.8
- */
 public class Transaction {
-    private String from;
-    private String to;
+    private byte[] from;
+    private byte[] to;
     private BigInteger value;
-    private String data;
-    private String sig;
+    private byte[] data;
 
-    public Transaction(String from, String to, BigInteger value, String data) {
+    public Transaction(byte[] from, byte[] to, BigInteger value, byte[] data) {
         this.from = from;
         this.to = to;
         this.value = value;
         this.data = data;
     }
 
-    public String getFrom() {
+    public byte[] getFrom() {
         return from;
     }
 
-    public void setFrom(String from) {
+    public void setFrom(byte[] from) {
         this.from = from;
     }
 
-    public String getTo() {
+    public byte[] getTo() {
         return to;
     }
 
-    public void setTo(String to) {
+    public void setTo(byte[] to) {
         this.to = to;
     }
 
@@ -47,29 +40,20 @@ public class Transaction {
         this.value = value;
     }
 
-    public String getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
-
-    public String getSig() {
-        return sig;
-    }
-
-    public void setSig(String sig) {
-        this.sig = sig;
-    }
-
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Transaction{");
-        sb.append("data='").append(data).append('\'');
-        sb.append(", from='").append(from).append('\'');
-        sb.append(", to='").append(to).append('\'');
+        sb.append("data=").append(Arrays.toString(data));
+        sb.append(", from=").append(Arrays.toString(from));
+        sb.append(", to=").append(Arrays.toString(to));
         sb.append(", value=").append(value);
         sb.append('}');
         return sb.toString();

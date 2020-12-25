@@ -28,7 +28,7 @@ public class TransactionTest {
         CryptoSuite cs = new CryptoSuite(CryptoType.SM_TYPE);
         CryptoKeyPair from = cs.createKeyPair();
         CryptoKeyPair to = cs.createKeyPair();
-        Transaction tx = new Transaction(from.getAddress(), to.getAddress(), BigInteger.ZERO, null);
+        Transaction tx = new Transaction(from.getAddress().getBytes(), to.getAddress().getBytes(), BigInteger.ZERO, null);
         System.out.println(to.getAddress());
         SignatureResult res = cs.sign(cs.hash(tx.toString()), from);
 
