@@ -14,9 +14,10 @@ public abstract class SignatureResult {
     protected byte[] s;
     protected byte[] signatureBytes;
 
-    SignatureResult(final byte[] r, final byte[] s) {
+    SignatureResult(final byte[] r, final byte[] s, final byte[] sig) {
         this.r = r;
         this.s = s;
+        this.signatureBytes = sig;
     }
 
     /**
@@ -72,6 +73,7 @@ public abstract class SignatureResult {
     protected void encodeCommonField(List<RlpType> encodeResult) {
         encodeResult.add(RlpString.create(ByteUtils.trimLeadingZeroes(this.getR())));
         encodeResult.add(RlpString.create(ByteUtils.trimLeadingZeroes(this.getS())));
+        encodeResult.add(RlpString.create(this.getSignatureBytes()));
     }
 
     /**

@@ -15,8 +15,8 @@ public class ECDSASignatureResult extends SignatureResult {
     protected byte v;
     protected static int VBASE = 27;
 
-    public ECDSASignatureResult(byte v, byte[] r, byte[] s) {
-        super(r, s);
+    public ECDSASignatureResult(byte v, byte[] r, byte[] s, byte[] sig) {
+        super(r, s, sig);
         this.v = v;
     }
 

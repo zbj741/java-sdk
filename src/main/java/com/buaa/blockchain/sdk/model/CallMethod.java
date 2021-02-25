@@ -1,5 +1,15 @@
 package com.buaa.blockchain.sdk.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Arrays;
+import java.util.StringJoiner;
+
+@Getter
+@Setter
+@AllArgsConstructor
 public class CallMethod {
     private String method;
     private Object[] params;
@@ -7,16 +17,12 @@ public class CallMethod {
     public CallMethod() {
     }
 
-    public CallMethod(String method, Object[] params) {
-        this.method = method;
-        this.params = params;
-    }
 
-    public String getMethod() {
-        return method;
-    }
-
-    public Object[] getParams() {
-        return params;
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", CallMethod.class.getSimpleName() + "[", "]")
+                .add("method='" + method + "'")
+                .add("params=" + Arrays.toString(params))
+                .toString();
     }
 }

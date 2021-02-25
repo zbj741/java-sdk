@@ -16,8 +16,8 @@ public class SM2SignatureResult extends SignatureResult {
         this.pub = Hex.decode(hexPublicKey.substring(2));
     }
 
-    public SM2SignatureResult(byte[] pub, byte[] r, byte[] s) {
-        super(r, s);
+    public SM2SignatureResult(byte[] pub, byte[] r, byte[] s, byte[] sig) {
+        super(r, s, sig);
         this.pub = pub;
     }
 
