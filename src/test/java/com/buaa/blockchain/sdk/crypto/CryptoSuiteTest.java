@@ -2,14 +2,18 @@ package com.buaa.blockchain.sdk.crypto;
 
 import com.buaa.blockchain.sdk.config.CryptoType;
 import com.buaa.blockchain.sdk.crypto.keypair.CryptoKeyPair;
+import com.buaa.blockchain.sdk.crypto.keystore.KeyTool;
 import com.buaa.blockchain.sdk.crypto.signature.ECDSASignatureResult;
 import com.buaa.blockchain.sdk.crypto.signature.SM2SignatureResult;
 import com.buaa.blockchain.sdk.crypto.signature.SignatureResult;
 import com.buaa.blockchain.sdk.crypto.utils.Hex;
+import com.buaa.blockchain.sdk.util.HexUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.security.PrivateKey;
 
 
 public class CryptoSuiteTest { 
@@ -79,6 +83,12 @@ public class CryptoSuiteTest {
 
         Assert.assertTrue(cs.verify(keyPair.getHexPublicKey(), msgHash, signatureResult.getSignatureBytes()));
         Assert.assertTrue(cs.verify("04"+Hex.toHexString(pubKeyBytes), msgHash, signatureResult.getSignatureBytes()));
+    }
+
+    @Test
+    public void testContractAddr(){
+        PrivateKey pk = KeyTool.convertHexedStringToPrivateKey(HexUtil.toHexString("123123".getBytes()), "123");
+        System.out.println(pk.toString());
     }
 
 }

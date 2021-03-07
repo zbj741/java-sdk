@@ -3,6 +3,9 @@ import java.util.Map;
 
 public class HelloWorldContract { private Map<String, Object> db;
 
+    public HelloWorldContract() {
+    }
+
     public HelloWorldContract(Map storage) {
        storage.getOrDefault("db", new HashMap<>());
     }

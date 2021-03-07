@@ -15,4 +15,5 @@ public class Transaction {
     private BigInteger value;
     private byte[] data;
     private Timestamp timestamp;
+    private Integer createContract;
 }

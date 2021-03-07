@@ -29,8 +29,8 @@ import java.util.List;
 public class SignTransaction extends Transaction{
     private SignatureResult signatureResult;
 
-    public SignTransaction(byte[] to, BigInteger value, byte[] data, Timestamp timestamp, SignatureResult signatureResult) {
-        super(to, value, data, timestamp);
+    public SignTransaction(byte[] to, BigInteger value, byte[] data, Timestamp timestamp, Integer createContract, SignatureResult signatureResult) {
+        super(to, value, data, timestamp, createContract);
         this.signatureResult = signatureResult;
     }
 
@@ -59,6 +59,7 @@ public class SignTransaction extends Transaction{
 
             publicKey = "04"+ Hex.toHexString(((SM2SignatureResult) signatureResult).getPub());
         }
+        System.out.println(publicKey);
         if(!signature.verify(publicKey, cryptoSuite.hash(encode(this, null)), signatureResult.getSignatureBytes())){
             throw new IllegalAccessException();
         }
@@ -88,7 +89,11 @@ public class SignTransaction extends Transaction{
         }else{
             result.add(RlpString.create(""));
         }
-        // 4. 签名数据
+        // 4. 时间
+        result.add(RlpString.create(tx.getTimestamp().getTime()));
+        // 5. 是否创建合约
+        result.add(RlpString.create(tx.getCreateContract()));
+        // 6. 签名数据
         if (signatureResult != null) {
             result.addAll(signatureResult.encode());
         }

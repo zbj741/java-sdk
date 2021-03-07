@@ -16,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.math.BigInteger;
 
 /**
  * xxxx
@@ -55,9 +54,7 @@ public class ChainSDKECTest {
 
     @Test
     public void testDecodeTx() throws IOException, IllegalAccessException {
-        CallMethod callMethod =  new CallMethod("setName", new Object[]{"zhang"});
-        byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
-        Transaction tx = chainSDK.newTx("0x7f55da6b798c6202ca815a1f0af3aa2cf78f2206", BigInteger.ZERO, data);
+        Transaction tx = chainSDK.newCallTx("0x7f55da6b798c6202ca815a1f0af3aa2cf78f2206", "setName", new Object[]{"zhang"});
         String encodeStr = chainSDK.encodeAndSign(tx, cryptoKeyPair);
 
         SignTransaction dtx = (SignTransaction) chainSDK.decodeTx(encodeStr);
@@ -66,8 +63,26 @@ public class ChainSDKECTest {
         Assert.assertEquals(tx.getValue(), dtx.getValue());
         Assert.assertEquals(Hex.toHexString(tx.getData()), Hex.toHexString(dtx.getData()));
         Assert.assertEquals(cryptoKeyPair.getAddress(), dtx.getFrom());
+        Assert.assertEquals(0, dtx.getCreateContract().intValue());
 
         CallMethod decodeCallMethod = new ObjectMapper().readValue(dtx.getData(), CallMethod.class);
-        Assert.assertEquals(callMethod.toString(), decodeCallMethod.toString());
+        Assert.assertEquals("setName", decodeCallMethod.getMethod());
+    }
+
+    @Test
+    public void testDecodeContractTx() throws IOException, IllegalAccessException, ClassNotFoundException {
+        Transaction tx = chainSDK.newContractTx("HelloWorldContract");
+        String encodeStr = chainSDK.encodeAndSign(tx, cryptoKeyPair);
+        System.out.println(encodeStr);
+        SignTransaction dtx = (SignTransaction) chainSDK.decodeTx(encodeStr);
+
+        Assert.assertEquals(Hex.toHexString(tx.getTo()), Hex.toHexString(dtx.getTo()));
+        Assert.assertEquals(tx.getValue(), dtx.getValue());
+        Assert.assertEquals(Hex.toHexString(tx.getData()), Hex.toHexString(dtx.getData()));
+        Assert.assertEquals(cryptoKeyPair.getAddress(), dtx.getFrom());
+        Assert.assertEquals(1, dtx.getCreateContract().intValue());
+
+        CallMethod decodeCallMethod = new ObjectMapper().readValue(dtx.getData(), CallMethod.class);
+        Assert.assertEquals("setName", decodeCallMethod.getMethod());
     }
 }

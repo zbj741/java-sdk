@@ -56,15 +56,19 @@ public class ChainSDK {
     }
 
     public Transaction newTx(String to, BigInteger val, byte[] data){
+        return newTx(to, val, data, 0);
+    }
+
+    public Transaction newTx(String to, BigInteger val, byte[] data, Integer isCreateContract){
         byte[] toAddr = to !=null ? to.getBytes() : null;
-        return new Transaction(toAddr, val, data, new Timestamp(new Date().getTime()));
+        return new Transaction(toAddr, val, data, new Timestamp(new Date().getTime()), isCreateContract);
     }
 
     public Transaction newCallTx(String contractAddr, String method, Object[] params) throws JsonProcessingException {
         CallMethod callMethod = new CallMethod(method, params);
         byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
 
-        return newTx(contractAddr, BigInteger.ZERO, data);
+        return newTx(contractAddr, BigInteger.ZERO, data, 0);
     }
 
     public Transaction newContractTx(String contractName) throws IOException, ClassNotFoundException {
@@ -74,7 +78,9 @@ public class ChainSDK {
         Class mainClass = ReflectUtil.getInstance().loadClass(contractName, byteData);
         Class[] classes = ObjectArrays.concat(mainClass, mainClass.getDeclaredClasses());
         byte[] bytes = PackageUtil.pack(classes);
-        return newTx(null, BigInteger.ZERO, bytes);
+
+        String newContractAddr = cryptoSuite.createKeyPair().getAddress();
+        return newTx(newContractAddr, BigInteger.ZERO, bytes, 1);
     }
 
     public HttpClientResult call(String contractAddr, String method, Object[] params) throws JsonProcessingException {
@@ -123,24 +129,25 @@ public class ChainSDK {
         BigInteger val = ((RlpString) values.getValues().get(1)).asPositiveBigInteger();
         byte[] data = ((RlpString) values.getValues().get(2)).getBytes();
         Timestamp timestamp = new Timestamp(((RlpString) values.getValues().get(3)).asPositiveBigInteger().longValue());
-        if(values.getValues().size()>4){
+        Integer isCreateContract = ((RlpString) values.getValues().get(4)).asPositiveBigInteger().intValue();
+        if(values.getValues().size()>5){
             SignatureResult signatureResult = null;
             if(cryptoType == CryptoType.ECDSA_TYPE){
-                byte v = ((RlpString) values.getValues().get(4)).getBytes()[0];
-                byte[] r = ((RlpString) values.getValues().get(5)).getBytes();
-                byte[] s = ((RlpString) values.getValues().get(6)).getBytes();
-                byte[] sig = ((RlpString) values.getValues().get(7)).getBytes();
+                byte v = ((RlpString) values.getValues().get(5)).getBytes()[0];
+                byte[] r = ((RlpString) values.getValues().get(6)).getBytes();
+                byte[] s = ((RlpString) values.getValues().get(7)).getBytes();
+                byte[] sig = ((RlpString) values.getValues().get(8)).getBytes();
                 signatureResult = new ECDSASignatureResult(v, r, s, sig);
             } else if(cryptoType == CryptoType.SM_TYPE) {
-                byte[] pubKeyBytes = ((RlpString) values.getValues().get(4)).getBytes();
-                byte[] r = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(5)).getBytes()), 32);
-                byte[] s = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(6)).getBytes()), 32);
-                byte[] sig = ((RlpString) values.getValues().get(7)).getBytes();
+                byte[] pubKeyBytes = ((RlpString) values.getValues().get(5)).getBytes();
+                byte[] r = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(6)).getBytes()), 32);
+                byte[] s = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(7)).getBytes()), 32);
+                byte[] sig = ((RlpString) values.getValues().get(8)).getBytes();
                 signatureResult = new SM2SignatureResult(pubKeyBytes, r, s, sig);
             }
-            return new SignTransaction(to, val, data, timestamp, signatureResult);
+            return new SignTransaction(to, val, data, timestamp, isCreateContract, signatureResult);
         } else {
-           return new Transaction(to, val, data, timestamp);
+           return new Transaction(to, val, data, timestamp, isCreateContract);
         }
     }
 
@@ -160,7 +167,11 @@ public class ChainSDK {
         }else{
             result.add(RlpString.create(""));
         }
-        // 4. 签名数据
+        // 4. 时间
+        result.add(RlpString.create(tx.getTimestamp().getTime()));
+        // 5. 是否创建合约
+        result.add(RlpString.create(tx.getCreateContract()));
+        // 6. 签名数据
         if (signatureResult != null) {
             result.addAll(signatureResult.encode());
         }
