@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigInteger;
+import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -13,4 +14,5 @@ public class Transaction {
     private byte[] to;
     private BigInteger value;
     private byte[] data;
+    private Timestamp timestamp;
 }

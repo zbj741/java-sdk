@@ -57,7 +57,7 @@ public class ChainSDKECTest {
     public void testDecodeTx() throws IOException, IllegalAccessException {
         CallMethod callMethod =  new CallMethod("setName", new Object[]{"zhang"});
         byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
-        Transaction tx = new Transaction("0x7f55da6b798c6202ca815a1f0af3aa2cf78f2206".getBytes(), BigInteger.ZERO, data);
+        Transaction tx = chainSDK.newTx("0x7f55da6b798c6202ca815a1f0af3aa2cf78f2206", BigInteger.ZERO, data);
         String encodeStr = chainSDK.encodeAndSign(tx, cryptoKeyPair);
 
         SignTransaction dtx = (SignTransaction) chainSDK.decodeTx(encodeStr);

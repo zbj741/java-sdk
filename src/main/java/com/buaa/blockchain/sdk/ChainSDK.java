@@ -24,7 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,26 +55,35 @@ public class ChainSDK {
         this.cryptoKeyPair = cryptoSuite.createKeyPair(privateKey);
     }
 
-    public HttpClientResult deployContract(String contractName) throws IOException, ClassNotFoundException {
+    public Transaction newTx(String to, BigInteger val, byte[] data){
+        byte[] toAddr = to !=null ? to.getBytes() : null;
+        return new Transaction(toAddr, val, data, new Timestamp(new Date().getTime()));
+    }
+
+    public Transaction newContractTx(String contractName) throws IOException, ClassNotFoundException {
         InputStream in = ChainSDK.class.getResourceAsStream("/"+contractName+".class");
         byte[] byteData = ByteStreams.toByteArray(in);
 
         Class mainClass = ReflectUtil.getInstance().loadClass(contractName, byteData);
         Class[] classes = ObjectArrays.concat(mainClass, mainClass.getDeclaredClasses());
         byte[] bytes = PackageUtil.pack(classes);
-
-        return sendSignTransaction(null, BigInteger.ZERO, bytes);
+        return newTx(null, BigInteger.ZERO, bytes);
     }
 
     public HttpClientResult call(String contractAddr, String method, Object[] params) throws JsonProcessingException {
         CallMethod callMethod = new CallMethod(method, params);
         byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
-        return sendSignTransaction(contractAddr, BigInteger.ZERO, data);
+
+        Transaction tx = newTx(contractAddr, BigInteger.ZERO, data);
+        return sendSignTransaction(tx);
     }
 
-    private HttpClientResult sendSignTransaction(String to, BigInteger val, byte[] data) {
-        byte[] toAddr = to !=null ? to.getBytes() : null;
-        Transaction tx = new Transaction(toAddr, val, data);
+    public HttpClientResult deployContract(String contractName) throws IOException, ClassNotFoundException {
+        Transaction tx = newContractTx(contractName);
+        return sendSignTransaction(tx);
+    }
+
+    public HttpClientResult sendSignTransaction(Transaction tx) {
         try {
             String encodeData = encodeAndSign(tx, cryptoKeyPair);
             return HttpClientUtils.doPost(chainHost+"/api/v1/tx/send", encodeData);
@@ -107,24 +118,25 @@ public class ChainSDK {
         byte[] to = ((RlpString) values.getValues().get(0)).getBytes();
         BigInteger val = ((RlpString) values.getValues().get(1)).asPositiveBigInteger();
         byte[] data = ((RlpString) values.getValues().get(2)).getBytes();
-        if(values.getValues().size()>3){
+        Timestamp timestamp = new Timestamp(((RlpString) values.getValues().get(3)).asPositiveBigInteger().longValue());
+        if(values.getValues().size()>4){
             SignatureResult signatureResult = null;
             if(cryptoType == CryptoType.ECDSA_TYPE){
-                byte v = ((RlpString) values.getValues().get(3)).getBytes()[0];
-                byte[] r = ((RlpString) values.getValues().get(4)).getBytes();
-                byte[] s = ((RlpString) values.getValues().get(5)).getBytes();
-                byte[] sig = ((RlpString) values.getValues().get(6)).getBytes();
+                byte v = ((RlpString) values.getValues().get(4)).getBytes()[0];
+                byte[] r = ((RlpString) values.getValues().get(5)).getBytes();
+                byte[] s = ((RlpString) values.getValues().get(6)).getBytes();
+                byte[] sig = ((RlpString) values.getValues().get(7)).getBytes();
                 signatureResult = new ECDSASignatureResult(v, r, s, sig);
             } else if(cryptoType == CryptoType.SM_TYPE) {
-                byte[] pubKeyBytes = ((RlpString) values.getValues().get(3)).getBytes();
-                byte[] r = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(4)).getBytes()), 32);
-                byte[] s = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(5)).getBytes()), 32);
-                byte[] sig = ((RlpString) values.getValues().get(6)).getBytes();
+                byte[] pubKeyBytes = ((RlpString) values.getValues().get(4)).getBytes();
+                byte[] r = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(5)).getBytes()), 32);
+                byte[] s = Numeric.toBytesPadded(Numeric.toBigInt(((RlpString) values.getValues().get(6)).getBytes()), 32);
+                byte[] sig = ((RlpString) values.getValues().get(7)).getBytes();
                 signatureResult = new SM2SignatureResult(pubKeyBytes, r, s, sig);
             }
-            return new SignTransaction(to, val, data, signatureResult);
+            return new SignTransaction(to, val, data, timestamp, signatureResult);
         } else {
-           return new Transaction(to, val, data);
+           return new Transaction(to, val, data, timestamp);
         }
     }
 

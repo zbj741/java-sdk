@@ -13,9 +13,9 @@ import com.buaa.blockchain.sdk.crypto.rlp.RlpType;
 import com.buaa.blockchain.sdk.crypto.signature.*;
 import com.buaa.blockchain.sdk.crypto.utils.Hex;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.primitives.Bytes;
 
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +29,8 @@ import java.util.List;
 public class SignTransaction extends Transaction{
     private SignatureResult signatureResult;
 
-    public SignTransaction(byte[] to, BigInteger value, byte[] data, SignatureResult signatureResult) {
-        super(to, value, data);
+    public SignTransaction(byte[] to, BigInteger value, byte[] data, Timestamp timestamp, SignatureResult signatureResult) {
+        super(to, value, data, timestamp);
         this.signatureResult = signatureResult;
     }
 
