@@ -60,6 +60,13 @@ public class ChainSDK {
         return new Transaction(toAddr, val, data, new Timestamp(new Date().getTime()));
     }
 
+    public Transaction newCallTx(String contractAddr, String method, Object[] params) throws JsonProcessingException {
+        CallMethod callMethod = new CallMethod(method, params);
+        byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
+
+        return newTx(contractAddr, BigInteger.ZERO, data);
+    }
+
     public Transaction newContractTx(String contractName) throws IOException, ClassNotFoundException {
         InputStream in = ChainSDK.class.getResourceAsStream("/"+contractName+".class");
         byte[] byteData = ByteStreams.toByteArray(in);
@@ -71,10 +78,7 @@ public class ChainSDK {
     }
 
     public HttpClientResult call(String contractAddr, String method, Object[] params) throws JsonProcessingException {
-        CallMethod callMethod = new CallMethod(method, params);
-        byte[] data = new ObjectMapper().writeValueAsBytes(callMethod);
-
-        Transaction tx = newTx(contractAddr, BigInteger.ZERO, data);
+        Transaction tx = newCallTx(contractAddr, method, params);
         return sendSignTransaction(tx);
     }
 
